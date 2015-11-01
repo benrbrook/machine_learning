@@ -3,4 +3,4 @@ This repo contains most of the work I have been doing in machine learning resear
 
 A Google Maps Geocoding API key is requried to use the geo scripts.  Just place the key in a file called key.txt.
 
-"location-data" contains all of the formatted geospatial data.  The data includes real estate and weather.
+"location-data" contains all of the formatted geospatial data.  The includes real estate and weather data.
