@@ -16,13 +16,13 @@ with open(sys.argv[1], 'rt') as csvfile:
 	lines = csv.reader(csvfile)
 	dataset = list(lines)
 	for x in range(1, len(dataset) - 1):
-		# Grab address and price
+		# Grab address and value
 		latlng = (dataset[x][0], dataset[x][1])
-		price = dataset[x][2]
+		value = dataset[x][2]
 		if latlng not in locations:
-			locations[latlng] = [int(price)]
+			locations[latlng] = [int(value)]
 		else:
-			locations[latlng].append(int(price))
+			locations[latlng].append(int(value))
 
 for key in locations:
 	locations[key] = int(np.mean(locations[key]))
