@@ -5,9 +5,11 @@ import operator
 import sys
 import geocoder
 from time import sleep
+from sklearn.metrics import mean_squared_error
+from math import sqrt
 
 # Load in houses and split into training and test sets
-def loadDataset(filename, split, trainingSet=[], testSet=[]):
+def loadDataset(filename, split, trainingSet=[], test_set=[]):
 	with open(filename, 'rt') as csvfile:
 		lines = csv.reader(csvfile)
 		dataset = list(lines)
@@ -17,7 +19,7 @@ def loadDataset(filename, split, trainingSet=[], testSet=[]):
 			if random.random() < split:
 				trainingSet.append(house)
 			else:
-				testSet.append(house)
+				test_set.append(house)
 
 # Calculate euclidean between two points
 def euclideanDistance(instance1, instance2, length):
@@ -53,30 +55,22 @@ def getResponse(neighbors):
 	return sortedVotes[0][0]
 
 # Compare test set to the prediction within margin of error
-def getAccuracy(testSet, predictions):
-	correct = 0
-	error_margin = .4
-	for x in range(len(testSet)):
-		if (1 - error_margin) * int(testSet[x][-1]) <= int(predictions[x]) <= (1 + error_margin) * int(testSet[x][-1]):
-			correct += 1
-	return (correct/float(len(testSet))) * 100.0
+def getAccuracy(test_set, predictions):
+	rmse = sqrt(mean_squared_error(test_set, predictions));
+	return rmse
 
 trainingSet = []
-testSet = []
-loadDataset('locations', 0.67, trainingSet, testSet)
+test_set = []
+loadDataset(sys.argv[1], 0.67, trainingSet, test_set)
 predictions = []
-accuracy = 0
-k = int(sys.argv[1])
-print("Averaging 10 runs\n")
-for n in range(10):
-	for x in range(len(testSet)):
-		neighbors = getNeighbors(trainingSet, testSet[x], k)
-		result = getResponse(neighbors)
-		predictions.append(result)
-		# print('> predicted = ' + repr(result) + ', actual = ' + repr(testSet[x][-1]))
-	accuracy += getAccuracy(testSet, predictions)
-accuracy = (accuracy / 10)
-print('Accuracy: ' + repr(accuracy) + '%')
+rmse = 0
+k = int(sys.argv[2])
+for x in range(len(test_set)):
+	neighbors = getNeighbors(trainingSet, test_set[x], k)
+	result = getResponse(neighbors)
+	predictions.append(result)
+rmse = getAccuracy(test_set, predictions)
+print("k: " + k + " rmse: " + k)
 
 
 
