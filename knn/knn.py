@@ -56,7 +56,15 @@ def getResponse(neighbors):
 
 # Compare test set to the prediction within margin of error
 def getAccuracy(test_set, predictions):
-	rmse = sqrt(mean_squared_error(test_set, predictions));
+	if len(test_set) != len(predictions):
+		print("Sets of different lengths")
+		exit(1)
+
+	squared_errors = 0
+	for i in range(len(test_set)):
+		squared_errors += ((int(predictions[i]) - int(test_set[i])) ** 2)
+	mse = (squared_errors / len(test_set))
+	rmse = sqrt(mse)
 	return rmse
 
 trainingSet = []
@@ -69,8 +77,10 @@ for x in range(len(test_set)):
 	neighbors = getNeighbors(trainingSet, test_set[x], k)
 	result = getResponse(neighbors)
 	predictions.append(result)
+test_set = [x[-1] for x in test_set]
+
 rmse = getAccuracy(test_set, predictions)
-print("k: " + k + " rmse: " + k)
+print("k: " + str(k) + " rmse: " + str(rmse))
 
 
 
