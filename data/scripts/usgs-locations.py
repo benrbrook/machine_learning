@@ -37,5 +37,7 @@ for line in f:
 		latlon = stations[id]
 	else:
 		continue
+	if not (latlon[0] and latlon[1]):
+		continue
 	csv_line = latlon[0] + "," + latlon[1] + "," + data + "\n"
 	split_f.write(csv_line)
