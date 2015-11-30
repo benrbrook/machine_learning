@@ -6,6 +6,7 @@ import sys
 import geocoder
 from time import sleep
 from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
 from math import sqrt
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
@@ -21,10 +22,10 @@ def load_dataset(filename, training_set=[], validation_set = [], test_set=[]):
 		for x in range(1, len(dataset) - 1):
 			# Grab address and price
 			data_point = dataset[x]
-			r = randint(1, 3)
-			if r == 1:
+			r = randint(0, 9)
+			if 0 <= r <= 5:
 				training_set.append(data_point)
-			elif r == 2:
+			elif r == 6 or r == 7:
 				validation_set.append(data_point)
 			else:
 				test_set.append(data_point)
@@ -59,12 +60,22 @@ def average_neighbors(neighbors):
 	return sum/len(neighbors)
 
 # Compare test set to the prediction within margin of error
+# Root mean square error
 def get_rmse(validation_set, predictions):
 	if len(validation_set) != len(predictions):
 		print("Sets of different lengths")
 		exit(1)
 	rmse = sqrt(mean_squared_error(validation_set, predictions))
 	return rmse
+
+# Mean absolute error
+def get_mae(validation_set, predictions):
+	if len(validation_set) != len(predictions):
+		print("Sets of different lengths")
+		exit(1)
+	mae = mean_absolute_error(validation_set, predictions)
+	return mae
+
 
 def get_accuracy(test_set, predictions, rmse):
 	print(test_set)
@@ -82,6 +93,8 @@ test_set = []
 load_dataset(sys.argv[1], training_set, validation_set, test_set)
 
 # Main
+
+# Find an optimal K value here
 rmse = []
 for k in range(1, 25):
 	print("K: " + str(k))
@@ -93,49 +106,55 @@ for k in range(1, 25):
 		neighbor_average = average_neighbors(nearest_k_neighbors)
 		predictions.append(neighbor_average)
 	rmse.append((k, get_rmse([float(x[-1]) for x in validation_set], predictions)))
+
+# Check for lowest RMSE
 optimal_model = sorted(rmse, key=operator.itemgetter(1))[0]
 optimal_k = optimal_model[0]
 optimal_rmse = optimal_model[1]
 print("Optimal k: %d, rmse: %.3f" % (optimal_k, optimal_rmse))
 
-optimal_k = 1
+# Do a final calculation on data
 final_rmse = 0
 final_predictions = []
+
 for x in range(len(test_set)):
 	final_nearest_k_neighbors = get_neighbors(validation_set, test_set[x], optimal_k)
 	final_neighbor_average = average_neighbors(final_nearest_k_neighbors)
 	final_predictions.append(final_neighbor_average)
 final_rmse = get_rmse([float(x[-1]) for x in test_set], final_predictions)
-# acccuracy = get_accuracy([int(x[-1]) for x in test_set], final_predictions, final_rmse)
+final_mae = get_mae([float(x[-1]) for x in test_set], final_predictions)
+
 print("Final rmse: %.3f" % final_rmse)
-# print("Accuracy: %.1f" % acccuracy)
+print("Final mae: %.3f" % final_mae)
+test_min = min([float(x[-1]) for x in test_set])
+test_max = max([float(x[-1]) for x in test_set])
+print("Test set min: %.3f,Test set max: %.3f\n" % (test_min, test_max))
+# map = Basemap(width=5000000, height=4000000, projection='tmerc', 
+#               resolution='i', lat_0=37.09024, lon_0=-95.712891)
 
-map = Basemap(width=5000000, height=4000000, projection='tmerc', 
-              resolution='i', lat_0=37.09024, lon_0=-95.712891)
+# map.drawmapboundary(fill_color='aqua')
+# map.fillcontinents(color='coral',lake_color='aqua')
+# map.drawcoastlines()
 
-map.drawmapboundary(fill_color='aqua')
-map.fillcontinents(color='coral',lake_color='aqua')
-map.drawcoastlines()
+# # lon = [float(x[1]) for x in test_set]
+# # lat = [float(x[0]) for x in test_set]
+# # x, y = map(lon, lat)
+# # map.scatter(x, y, marker='D',color='m')
 
-# lon = [float(x[1]) for x in test_set]
-# lat = [float(x[0]) for x in test_set]
-# x, y = map(lon, lat)
-# map.scatter(x, y, marker='D',color='m')
+# for i, data_point in enumerate(test_set):
+# 	lon = float(data_point[1])
+# 	lat = float(data_point[0])
+# 	temp = float(final_predictions[i])
+# 	x, y = map(lon, lat)
+# 	if temp > 0:
+# 		map.plot(x, y, marker='D',color='r')
+# 	else:
+# 		map.plot(x, y, marker='D',color='b')
+# 	# map.plot(x, y, marker='D',color='m')
+# 	# plt.text(x, y, str(temp), fontsize=12, fontweight='bold')
 
-for i, data_point in enumerate(test_set):
-	lon = float(data_point[1])
-	lat = float(data_point[0])
-	temp = float(final_predictions[i])
-	x, y = map(lon, lat)
-	if temp > 0:
-		map.plot(x, y, marker='D',color='r')
-	else:
-		map.plot(x, y, marker='D',color='b')
-	# map.plot(x, y, marker='D',color='m')
-	# plt.text(x, y, str(temp), fontsize=12, fontweight='bold')
-
-plt.suptitle(str(final_rmse))
-plt.show()
+# plt.suptitle(str(final_rmse))
+# plt.show()
 
 
 
